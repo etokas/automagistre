@@ -9,7 +9,7 @@ services:
             - ./public:/usr/local/app/public
             - ./etc/nginx.conf:/etc/nginx/nginx.template
         environment:
-            TAG: 'dev'
+            VERSION: 'dev'
 
     app:
         image: automagistre/app:base

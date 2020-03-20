@@ -96,7 +96,7 @@ RUN apk add --no-cache gzip curl
 
 COPY etc/nginx.conf /etc/nginx/nginx.template
 
-CMD sh -c "envsubst '\$TAG' < /etc/nginx/nginx.template > /etc/nginx/nginx.conf && cat /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"
+CMD sh -c "envsubst '\$VERSION' < /etc/nginx/nginx.template > /etc/nginx/nginx.conf && cat /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"
 HEALTHCHECK --interval=5s --timeout=3s --start-period=5s CMD curl --fail http://127.0.0.1/ping || exit 1
 
 FROM nginx-base AS nginx
