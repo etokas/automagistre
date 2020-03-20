@@ -6,6 +6,8 @@ services:
         networks:
             - automagistre
             - ingress
+        environment:
+            VERSION: ${VERSION}
         deploy:
             mode: replicated
             replicas: 1
@@ -30,7 +32,7 @@ services:
             mercure: {}
             automagistre:
                 aliases:
-                    - php-fpm
+                    - php-fpm-${VERSION}
         volumes:
           - /etc/automagistre/env:/usr/local/app/.env:ro
         secrets:
