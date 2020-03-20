@@ -4,12 +4,8 @@ services:
     nginx:
         image: automagistre/app-nginx:${VERSION}
         networks:
-            ingress: {}
-            automagistre:
-                aliases:
-                    - nginx-${VERSION}
-        environment:
-            VERSION: ${VERSION}
+            - automagistre
+            - ingress
         deploy:
             mode: replicated
             replicas: 1

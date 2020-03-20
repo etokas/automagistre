@@ -67,8 +67,6 @@ FROM base as app
 
 ENV APP_ENV prod
 ENV APP_DEBUG 0
-ARG VERSION
-ENV VERSION ${VERSION}
 ENV PHP_ZEND_ASSERTIONS -1
 
 COPY bin bin
@@ -82,8 +80,8 @@ RUN set -ex \
     && composer install --no-interaction --no-progress --no-dev --classmap-authoritative \
     && chown -R www-data:www-data ${APP_DIR}/var
 
-HEALTHCHECK --interval=10s --timeout=5s --start-period=15s \
-        CMD bash -c "nc -z nginx-${VERSION} 80 && REDIRECT_STATUS=true SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000"
+HEALTHCHECK --interval=10s --timeout=5s --start-period=5s \
+        CMD REDIRECT_STATUS=true SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000
 
 #
 # nginx
