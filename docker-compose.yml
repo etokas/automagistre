@@ -5,11 +5,13 @@ services:
         image: automagistre/app-nginx:base
         labels:
             ru.grachevko.dhu: 'sto.automagistre.local:2'
+        networks:
+            default:
+                aliases:
+                    - nginx-dev
         volumes:
             - ./public:/usr/local/app/public
             - ./etc/nginx.conf:/etc/nginx/nginx.template
-        environment:
-            VERSION: 'dev'
 
     app:
         image: automagistre/app:base

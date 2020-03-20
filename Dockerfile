@@ -65,10 +65,10 @@ ENV PHP_ZEND_ASSERTIONS 1
 
 FROM base as app
 
-ARG APP_ENV
 ENV APP_ENV prod
-ARG APP_DEBUG
 ENV APP_DEBUG 0
+ARG VERSION
+ENV VERSION ${VERSION}
 ENV PHP_ZEND_ASSERTIONS -1
 
 COPY bin bin
@@ -82,8 +82,8 @@ RUN set -ex \
     && composer install --no-interaction --no-progress --no-dev --classmap-authoritative \
     && chown -R www-data:www-data ${APP_DIR}/var
 
-HEALTHCHECK --interval=10s --timeout=5s --start-period=5s \
-        CMD REDIRECT_STATUS=true SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s \
+        CMD bash -c "nc -z nginx-${VERSION} 80 && REDIRECT_STATUS=true SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000"
 
 #
 # nginx
@@ -96,10 +96,14 @@ RUN apk add --no-cache gzip curl
 
 COPY etc/nginx.conf /etc/nginx/nginx.template
 
-CMD sh -c "envsubst '\$VERSION' < /etc/nginx/nginx.template > /etc/nginx/nginx.conf && cat /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"
-HEALTHCHECK --interval=5s --timeout=3s --start-period=5s CMD curl --fail http://127.0.0.1/ping || exit 1
+ENV VERSION dev
+
+CMD sh -c "envsubst '\$VERSION' < /etc/nginx/nginx.template > /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"
 
 FROM nginx-base AS nginx
+
+ARG VERSION
+ENV VERSION ${VERSION}
 
 COPY --from=app /usr/local/app/public/favicon.ico favicon.ico
 COPY --from=app /usr/local/app/public/assets assets
@@ -120,3 +124,5 @@ RUN find . \
      \) \
     -exec gzip -9 --name --suffix=.gz --keep {} \; \
     -exec echo Compressed: {} \;
+
+HEALTHCHECK --interval=5s --timeout=3s --start-period=15s CMD curl --fail http://127.0.0.1/ping || exit 1

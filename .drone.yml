@@ -27,15 +27,13 @@ steps:
             - >-
                 docker build -t "automagistre/app:${DRONE_BUILD_NUMBER}"
                 --progress=plain
-                --build-arg APP_ENV="prod"
-                --build-arg APP_DEBUG="0"
+                --build-arg VERSION="${DRONE_BUILD_NUMBER}"
                 --target app
                 .
             - >-
                 docker build -t "automagistre/app-nginx:${DRONE_BUILD_NUMBER}"
                 --progress=plain
-                --build-arg APP_ENV="prod"
-                --build-arg APP_DEBUG="0"
+                --build-arg VERSION="${DRONE_BUILD_NUMBER}"
                 --target nginx
                 .
         environment:
