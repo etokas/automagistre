@@ -39,168 +39,168 @@ steps:
             DOCKER_BUILDKIT: '1'
         depends_on:
             - build base
-
-    -   name: push base
-        image: docker:19.03.6
-        volumes:
-            -   name: docker.sock
-                path: /var/run/docker.sock
-        commands:
-            - docker login --username "$USERNAME" --password "$PASSWORD"
-            - docker push automagistre/app:base
-            - docker push automagistre/app-nginx:base
-        environment:
-            USERNAME:
-                from_secret: HUB_USER
-            PASSWORD:
-                from_secret: HUB_TOKEN
-        when:
-            branch: [ master ]
-        depends_on:
-            - build base
-
-    -   name: install
-        image: automagistre/app:base
-        commands:
-            - echo APP_ENV=test >> .env
-            - echo APP_DEBUG=1 >> .env
-            - composer install --no-interaction --no-progress --classmap-authoritative
-        depends_on:
-            - build base
-
-    -   name: php-cs-fixer
-        image: automagistre/app:base
-        commands:
-            - vendor/bin/php-cs-fixer fix --dry-run --diff-format udiff --using-cache=no
-        when:
-            branch:
-                exclude: [ master ]
-        depends_on:
-            - install
-
-    -   name: blank end line
-        image: automagistre/app:base
-        commands:
-            - >-
-                find .
-                -not -path "./public/*"
-                -not -path "./.idea/*"
-                -not -path "./var/*"
-                -not -path "./vendor/*"
-                -type f -exec grep -Iq . {} \; -and -print0
-                | xargs -0 -L1 bash -c 'test -z "$(tail -c 1 "$0")"
-                || (echo "No new line at end of $0" && exit 1)'
-                || exit 1
-        when:
-            branch:
-                exclude: [ master ]
-        depends_on:
-            - install
-
-    -   name: symfony requirements
-        image: automagistre/app:base
-        commands:
-            - vendor/bin/requirements-checker
-        when:
-            branch:
-                exclude: [ master ]
-        depends_on:
-            - install
-
-    -   name: symfony security
-        image: automagistre/app:base
-        commands:
-            - vendor/bin/security-checker security:check $APP_DIR/composer.lock
-        when:
-            branch:
-                exclude: [ master ]
-        depends_on:
-            - install
-
-    -   name: symfony linters
-        image: automagistre/app:base
-        commands:
-            - bin/console lint:yaml config
-            - bin/console lint:twig templates
-        depends_on:
-            - install
-
-    -   name: phpstan
-        image: automagistre/app:base
-        commands:
-            - vendor/bin/phpstan analyse --configuration phpstan.neon --no-progress --memory-limit=-1
-        depends_on:
-            - install
-
-    -   name: psalm
-        image: automagistre/app:base
-        commands:
-            - vendor/bin/psalm --show-info=false --no-progress
-        when:
-            event: [ push ]
-        depends_on:
-            - install
-
-    -   name: migration landlord
-        image: automagistre/app:base
-        commands:
-            - $$WAIT_FOR_IT landlord:5432
-            - bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --em=landlord
-        depends_on:
-            - install
-
-    -   name: migration tenant
-        image: automagistre/app:base
-        commands:
-            - $$WAIT_FOR_IT tenant_msk:5432
-            - bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --em=tenant --tenant=msk
-        depends_on:
-            - install
-
-    -   name: fixtures
-        image: automagistre/app:base
-        commands:
-            - bin/console doctrine:fixtures:load --no-interaction --group landlord
-            - bin/console doctrine:fixtures:load --no-interaction --group tenant --em=tenant --tenant=msk
-        depends_on:
-            - migration landlord
-            - migration tenant
-
-    -   name: doctrine validate landlord
-        image: automagistre/app:base
-        commands:
-            - bin/console doctrine:schema:validate --em=landlord
-        depends_on:
-            - migration landlord
-
-    -   name: doctrine validate tenant
-        image: automagistre/app:base
-        commands:
-            - bin/console doctrine:schema:validate --em=tenant --tenant=msk
-        depends_on:
-            - migration tenant
-
-    -   name: phpunit
-        image: automagistre/app:base
-        commands:
-            - vendor/bin/paratest --processes=$(nproc)
-        depends_on:
-            - fixtures
+#
+#    -   name: push base
+#        image: docker:19.03.6
+#        volumes:
+#            -   name: docker.sock
+#                path: /var/run/docker.sock
+#        commands:
+#            - docker login --username "$USERNAME" --password "$PASSWORD"
+#            - docker push automagistre/app:base
+#            - docker push automagistre/app-nginx:base
+#        environment:
+#            USERNAME:
+#                from_secret: HUB_USER
+#            PASSWORD:
+#                from_secret: HUB_TOKEN
+#        when:
+#            branch: [ master ]
+#        depends_on:
+#            - build base
+#
+#    -   name: install
+#        image: automagistre/app:base
+#        commands:
+#            - echo APP_ENV=test >> .env
+#            - echo APP_DEBUG=1 >> .env
+#            - composer install --no-interaction --no-progress --classmap-authoritative
+#        depends_on:
+#            - build base
+#
+#    -   name: php-cs-fixer
+#        image: automagistre/app:base
+#        commands:
+#            - vendor/bin/php-cs-fixer fix --dry-run --diff-format udiff --using-cache=no
+#        when:
+#            branch:
+#                exclude: [ master ]
+#        depends_on:
+#            - install
+#
+#    -   name: blank end line
+#        image: automagistre/app:base
+#        commands:
+#            - >-
+#                find .
+#                -not -path "./public/*"
+#                -not -path "./.idea/*"
+#                -not -path "./var/*"
+#                -not -path "./vendor/*"
+#                -type f -exec grep -Iq . {} \; -and -print0
+#                | xargs -0 -L1 bash -c 'test -z "$(tail -c 1 "$0")"
+#                || (echo "No new line at end of $0" && exit 1)'
+#                || exit 1
+#        when:
+#            branch:
+#                exclude: [ master ]
+#        depends_on:
+#            - install
+#
+#    -   name: symfony requirements
+#        image: automagistre/app:base
+#        commands:
+#            - vendor/bin/requirements-checker
+#        when:
+#            branch:
+#                exclude: [ master ]
+#        depends_on:
+#            - install
+#
+#    -   name: symfony security
+#        image: automagistre/app:base
+#        commands:
+#            - vendor/bin/security-checker security:check $APP_DIR/composer.lock
+#        when:
+#            branch:
+#                exclude: [ master ]
+#        depends_on:
+#            - install
+#
+#    -   name: symfony linters
+#        image: automagistre/app:base
+#        commands:
+#            - bin/console lint:yaml config
+#            - bin/console lint:twig templates
+#        depends_on:
+#            - install
+#
+#    -   name: phpstan
+#        image: automagistre/app:base
+#        commands:
+#            - vendor/bin/phpstan analyse --configuration phpstan.neon --no-progress --memory-limit=-1
+#        depends_on:
+#            - install
+#
+#    -   name: psalm
+#        image: automagistre/app:base
+#        commands:
+#            - vendor/bin/psalm --show-info=false --no-progress
+#        when:
+#            event: [ push ]
+#        depends_on:
+#            - install
+#
+#    -   name: migration landlord
+#        image: automagistre/app:base
+#        commands:
+#            - $$WAIT_FOR_IT landlord:5432
+#            - bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --em=landlord
+#        depends_on:
+#            - install
+#
+#    -   name: migration tenant
+#        image: automagistre/app:base
+#        commands:
+#            - $$WAIT_FOR_IT tenant_msk:5432
+#            - bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --em=tenant --tenant=msk
+#        depends_on:
+#            - install
+#
+#    -   name: fixtures
+#        image: automagistre/app:base
+#        commands:
+#            - bin/console doctrine:fixtures:load --no-interaction --group landlord
+#            - bin/console doctrine:fixtures:load --no-interaction --group tenant --em=tenant --tenant=msk
+#        depends_on:
+#            - migration landlord
+#            - migration tenant
+#
+#    -   name: doctrine validate landlord
+#        image: automagistre/app:base
+#        commands:
+#            - bin/console doctrine:schema:validate --em=landlord
+#        depends_on:
+#            - migration landlord
+#
+#    -   name: doctrine validate tenant
+#        image: automagistre/app:base
+#        commands:
+#            - bin/console doctrine:schema:validate --em=tenant --tenant=msk
+#        depends_on:
+#            - migration tenant
+#
+#    -   name: phpunit
+#        image: automagistre/app:base
+#        commands:
+#            - vendor/bin/paratest --processes=$(nproc)
+#        depends_on:
+#            - fixtures
 
     -   name: check deploy
         image: alpine/git:1.0.7
         commands:
             - \[ "${DRONE_COMMIT_SHA}" == "$$(git ls-remote origin ${DRONE_COMMIT_BRANCH} | awk '{ print $1}')" ] || exit 78
-        when:
-            branch: [ master ]
+#        when:
+#            branch: [ master ]
         depends_on:
             - build prod
-            - phpunit
-            - phpstan
-            - psalm
-            - symfony requirements
-            - doctrine validate landlord
-            - doctrine validate tenant
+#            - phpunit
+#            - phpstan
+#            - psalm
+#            - symfony requirements
+#            - doctrine validate landlord
+#            - doctrine validate tenant
 
     -   name: deploy
         image: docker/compose:1.25.0-alpine
@@ -211,8 +211,8 @@ steps:
             - docker-compose --file docker-compose.prod.yml config | docker stack deploy --prune --with-registry-auth --compose-file - automagistre
         environment:
             VERSION: ${DRONE_BUILD_NUMBER}
-        when:
-            branch: [ master ]
+#        when:
+#            branch: [ master ]
         depends_on:
             - check deploy
 
