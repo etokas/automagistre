@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Review\GraphQL\Type;
 
 use App\GraphQL\Context;
+use App\GraphQL\Type\ObjectType;
 use App\GraphQL\Type\Types;
 use App\Review\Entity\Review;
 use GraphQL\Deferred;
-use GraphQL\Type\Definition\ObjectType;
 
 final class ReviewType extends ObjectType
 {

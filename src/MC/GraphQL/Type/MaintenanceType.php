@@ -10,6 +10,7 @@ use App\MC\Entity\McLine;
 use App\Site\Context;
 use App\Vehicle\Entity\Embedded\Engine;
 use App\Vehicle\Entity\Model;
+use App\Vehicle\GraphQL\Type\VehicleType;
 use GraphQL\Deferred;
 use GraphQL\Type\Definition\ObjectType;
 
@@ -33,7 +34,7 @@ final class MaintenanceType extends ObjectType
                     },
                 ],
                 'vehicle' => [
-                    'type' => Types::vehicle(),
+                    'type' => VehicleType::nullable(),
                     'resolve' => static function (McEquipment $rootValue, array $args, Context $context): Deferred {
                         return $context->buffer->add(Model::class, $rootValue->vehicleId->toString());
                     },

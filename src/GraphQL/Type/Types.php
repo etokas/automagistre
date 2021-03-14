@@ -108,7 +108,7 @@ final class Types extends Type
     ];
 
     /**
-     * @var array<string, Type>
+     * @var array<string, ObjectType>
      */
     private static array $instances = [];
 

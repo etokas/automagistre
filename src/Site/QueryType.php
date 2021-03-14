@@ -10,7 +10,9 @@ use App\GraphQL\Type\Types;
 use App\MC\Entity\McEquipment;
 use App\Publish\Entity\PublishView;
 use App\Review\Entity\Review;
+use App\Review\GraphQL\Type\ReviewType;
 use App\Vehicle\Entity\Model;
+use App\Vehicle\GraphQL\Type\VehicleType;
 use DateTimeImmutable;
 use Doctrine\ORM\Query\Expr\Join;
 use GraphQL\Error\Error;
@@ -29,21 +31,7 @@ final class QueryType extends ObjectType
         $config = [
             'fields' => fn (): array => [
                 'stats' => [
-                    'type' => fn (): Type => new ObjectType([
-                        'name' => 'StatsType',
-                        'fields' => [
-                            'orders' => Types::nonNull(Types::int()),
-                            'vehicles' => Types::nonNull(Types::int()),
-                            'customers' => Types::nonNull(new ObjectType([
-                                'name' => 'StatsCustomersType',
-                                'fields' => [
-                                    'persons' => Types::nonNull(Types::int()),
-                                    'organizations' => Types::nonNull(Types::int()),
-                                ],
-                            ])),
-                            'reviews' => Types::nonNull(Types::int()),
-                        ],
-                    ]),
+                    'type' => StatsType::notNull(),
                     'resolve' => static function ($rootValue, $args, Context $context): array {
                         /** @var array<string, int> $stats */
                         $stats = $context->registry->connection()->fetchAssociative(
@@ -73,7 +61,7 @@ final class QueryType extends ObjectType
                     },
                 ],
                 'reviews' => [
-                    'type' => fn (): Type => Types::connection(Types::review()),
+                    'type' => fn (): Type => ReviewType::connection(),
                     'args' => [
                         'first' => [
                             'type' => Types::int(),
@@ -144,7 +132,7 @@ final class QueryType extends ObjectType
                     },
                 ],
                 'vehicle' => [
-                    'type' => fn (): Type => Types::nonNull(Types::vehicle()),
+                    'type' => fn (): Type => VehicleType::notNull(),
                     'args' => [
                         'id' => [
                             'type' => Types::nonNull(Types::uuid()),
@@ -155,7 +143,7 @@ final class QueryType extends ObjectType
                     },
                 ],
                 'vehicles' => [
-                    'type' => fn (): Type => Types::listOf(Types::vehicle()),
+                    'type' => fn (): Type => VehicleType::list(),
                     'args' => [
                         'manufacturerId' => [
                             'type' => Types::nonNull(Types::uuid()),
